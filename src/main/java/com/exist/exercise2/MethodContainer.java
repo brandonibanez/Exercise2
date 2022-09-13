@@ -6,7 +6,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
@@ -30,19 +36,24 @@ public class MethodContainer {
     
     public static void checkExistingFiles() {
         if(new File(SAVED_FILE).exists()) {
+            System.out.println("File selected: Saved");
             fileSelector = "saved";
             cellData = readFile("saved");
             numRows = Integer.parseInt(cellData.get("rows"));
             numCols = Integer.parseInt(cellData.get("cols"));
         }
         else if(new File(DEFAULT_FILE).exists()) {
+            System.out.println("File selected: Default");
             fileSelector = "default";
             cellData = readFile("default");
             numRows = Integer.parseInt(cellData.get("rows"));
             numCols = Integer.parseInt(cellData.get("cols"));
         } else {
+            System.out.println("Files are not existing. Creating a default file.\n");
             fileSelector = "default";
             cellData = generateTable("generate");
+            System.out.println("");
+            System.out.println("File selected: Default");
         }
     }
     
@@ -56,21 +67,20 @@ public class MethodContainer {
         }
     return "";
     }
-
+    
     public static void printArray(Map<String, String> map) {
         int counter = 1;
-        for(int i = 1; i <= numRows; i++)
-            for(int j = 1; j <= numCols; j++) {
-                String key = (("r"+(String.valueOf(i)))) + (("c"+(String.valueOf(j))));
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            if(!entry.getKey().equals("rows") && !entry.getKey().equals("cols")) {
                 if(counter == Integer.parseInt(map.get("cols"))) {
                     counter = 1;
-                    System.out.println(map.get(key) + " ");
-                }
-                else {
+                    System.out.println(entry.getValue() + " ");
+                } else {
                     counter++;
-                    System.out.print(map.get(key) + " ");
+                    System.out.print(entry.getValue() + " ");
                 }
             }
+        }
     }
 
     public static void createFile(LinkedHashMap<String, String> map, String s) {
@@ -114,6 +124,7 @@ public class MethodContainer {
                 ois.close();
             }
             catch (Exception e) {
+                e.printStackTrace();
             }
         }
         return map;
@@ -132,14 +143,16 @@ public class MethodContainer {
                     numRows += rows;
                     dimensionType = "rows";
                     dimensionValue = rows;
+                    cellData = generateTable("addDimensionRow");
                 } else {
                     System.out.print("Enter the number of columns you want to add: "); 
                     int cols = in.nextInt();
                     numCols += cols;
                     dimensionType = "columns";
                     dimensionValue = cols;
+                    cellData = generateTable("addDimensionColumn");
                 }
-                cellData = generateTable("addDimension");
+                
                 System.out.println("Sucessfully added " + dimensionValue + " " + dimensionType + " and was populated with random characters!");
                 loop = false;
             } catch(Exception e) {
@@ -155,7 +168,7 @@ public class MethodContainer {
         do {
             try {
             Scanner in = new Scanner(System.in);
-            if(!s.equals("addDimension")) {
+            if(s.equals("reset") || s.equals("generate")) {
                 System.out.print("Enter the number of rows: "); numRows = in.nextInt();
                 System.out.print("Enter the number of columns: "); numCols = in.nextInt();
                 matrix.put("rows", String.valueOf(numRows));
@@ -178,13 +191,37 @@ public class MethodContainer {
                     System.out.println("Invalid input!");
             }
         }while(loop);
-        createFile(matrix, fileSelector);
-        if(s.equals("reset"))
+        if(s.equals("reset")) {
             new File(SAVED_FILE).delete();
+            fileSelector = "default";
+        }
+        if(s.equals("addDimensionColumn"))
+            matrix = sortMatrixKeys(matrix);
+        createFile(matrix, fileSelector);
         return matrix;
     }
 
+    public static LinkedHashMap<String, String> sortMatrixKeys(LinkedHashMap<String, String> matrix) {
+        List list = new LinkedList(matrix.entrySet());
+        Comparator sortKeys = (o1,o2) -> {
+            return ((Comparable) ((Map.Entry) (o1)).getKey()).compareTo(((Map.Entry) (o2)).getKey());  
+        };
+        Collections.sort(list, sortKeys);
+        HashMap sortedHashMap = new LinkedHashMap();
+        sortedHashMap.put("rows", String.valueOf(numRows));
+        sortedHashMap.put("cols", String.valueOf(numCols));
+        for (Iterator it = list.iterator(); it.hasNext();)   
+        {
+            Map.Entry entry = (Map.Entry) it.next();
+            if(!entry.getKey().equals("rows") && !entry.getKey().equals("cols"))
+                sortedHashMap.put(entry.getKey(), entry.getValue());  
+        }
+        return (LinkedHashMap<String, String>)sortedHashMap;
+    }
+    
     public static void editCell(LinkedHashMap<String, String> map) { // Need saving
+            if(!fileSelector.equals("saved"))
+                System.out.println("Edit notice: A successful edit will produce a new text file called \"saved\".\n");
             System.out.println("Table dimensions Row/s: " + numRows + " Column/s: " + numCols + " | Index starting value is 1");
             int x = 0, y = 0;
             String cellString = "", mapKey;
@@ -207,7 +244,6 @@ public class MethodContainer {
                                         if(!cellString.equals("")) {
                                             cellString = cellString.replaceAll("\\s+","");
                                             map.replace(mapKey, cellString);
-                                            System.out.println("Edit success!"); System.out.println();
                                             loop = false;
                                             innerLoop = false;
                                         }

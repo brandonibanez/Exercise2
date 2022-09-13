@@ -24,7 +24,7 @@ public class Exercise2 extends MethodContainer{
                             }
                             else if(i == 2) { //Edit
                                 editCell(cellData);
-                                System.out.println("Successful edit! \nMatrix is now saved on a new file...");
+                                System.out.println("");
                             }
                             else if(i == 3) { //Print
                                 printArray(cellData);
@@ -37,9 +37,11 @@ public class Exercise2 extends MethodContainer{
                             }
                             else if(i == 5) { //Add rows
                                 addDimensions("rows");
+                                System.out.println("");
                             }
                             else if(i == 6) { //Add columns
                                 addDimensions("cols");
+                                System.out.println("");
                             }
                              else if(i == 7) { //Exit
                                 loop = false; 
