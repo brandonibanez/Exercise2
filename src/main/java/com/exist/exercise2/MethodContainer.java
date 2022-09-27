@@ -6,18 +6,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
 
-public class MethodContainer {
+public class MethodContainer{
     
     private static int numRows;
     private static int numCols;
@@ -30,11 +24,11 @@ public class MethodContainer {
     private static ObjectOutputStream oos = null;
     private static String fileSelector;
 
-    public static LinkedHashMap<String, String> getMatrix() {
+    public LinkedHashMap<String, String> getMatrix() {
         return cellData;
     }
     
-    public static void checkExistingFiles() {
+    public void checkExistingFiles() {
         if(new File(SAVED_FILE).exists()) {
             System.out.println("File selected: Saved");
             fileSelector = "saved";
@@ -52,27 +46,27 @@ public class MethodContainer {
             System.out.println("Files are not existing. Creating a default file.\n");
             fileSelector = "default";
             cellData = generateTable("generate");
-            System.out.println("");
+            System.out.println();
             System.out.println("File selected: Default");
         }
     }
     
-    public static String generateRandomCharacters(int times) {
+    public String generateRandomCharacters(int times) {
         Random rand = new Random();
         int i = rand.nextInt(122-65) + 65 ;
         if(i >= 91 && i <= 96)
             return generateRandomCharacters(times);
         if (times >= 1) {
-            return Character.toString((char) i) + generateRandomCharacters(times - 1);
+            return (char) i + generateRandomCharacters(times - 1);
         }
     return "";
     }
     
-    public static void printArray(Map<String, String> map) {
+    public void printMatrix(Map<String, String> matrix) {
         int counter = 1;
-        for (Map.Entry<String, String> entry : map.entrySet()) {
+        for (Map.Entry<String, String> entry : matrix.entrySet()) {
             if(!entry.getKey().equals("rows") && !entry.getKey().equals("cols")) {
-                if(counter == Integer.parseInt(map.get("cols"))) {
+                if(counter == Integer.parseInt(matrix.get("cols"))) {
                     counter = 1;
                     System.out.println(entry.getValue() + " ");
                 } else {
@@ -81,63 +75,61 @@ public class MethodContainer {
                 }
             }
         }
+        System.out.println();
     }
 
-    public static void createFile(LinkedHashMap<String, String> map, String s) {
+    public void createFile(LinkedHashMap<String, String> matrix, String filename) {
         try {
-            if(s.equals("default"))
+            if(filename.equals("default"))
                 fos = new FileOutputStream(DEFAULT_FILE);
             else
                 fos = new FileOutputStream(SAVED_FILE);
             oos = new ObjectOutputStream(fos);
-            oos.writeObject(map);
+            oos.writeObject(matrix);
         }
-        catch (IOException e) {
-            e.printStackTrace();
+        catch (IOException ignored) {
         }
         finally {
             try {
                 fos.close();
                 oos.close();
             }
-            catch (Exception e) {
+            catch (IOException ignored) {
             }
         }
     }
         
-    public static LinkedHashMap<String, String> readFile(String s) {
-        LinkedHashMap<String, String> map = new LinkedHashMap<>();
+    public LinkedHashMap<String, String> readFile(String filename) {
+        LinkedHashMap<String, String> matrix = new LinkedHashMap<>();
         try {
-            if(s.equals("default"))
+            if(filename.equals("default"))
                 fis = new FileInputStream(DEFAULT_FILE);
             else
                 fis = new FileInputStream(SAVED_FILE);
             ois = new ObjectInputStream(fis);
-            map = (LinkedHashMap<String, String>)ois.readObject();
+            matrix = (LinkedHashMap<String, String>)ois.readObject();
         }
-        catch (Exception e) {
-            e.printStackTrace();
+        catch (IOException | ClassNotFoundException ignored) {
         }
         finally {
             try {
                 fis.close();
                 ois.close();
             }
-            catch (Exception e) {
-                e.printStackTrace();
+            catch (IOException ignored) {
             }
         }
-        return map;
+        return matrix;
     }
     
-    public static void addDimensions(String s) {
+    public void addDimensions(String dimension) {
         boolean loop = true;
         String dimensionType;
         int dimensionValue;
         do {
             try {
                 Scanner in = new Scanner(System.in);
-                if(s.equals("rows")) {
+                if(dimension.equals("rows")) {
                     System.out.print("Enter the number of rows you want to add: "); 
                     int rows = in.nextInt();
                     numRows += rows;
@@ -152,37 +144,37 @@ public class MethodContainer {
                     dimensionValue = cols;
                     cellData = generateTable("addDimensionColumn");
                 }
-                
                 System.out.println("Sucessfully added " + dimensionValue + " " + dimensionType + " and was populated with random characters!");
                 loop = false;
             } catch(Exception e) {
                 System.out.println("Invalid input!");
             }
         }while(loop);
+        System.out.println();
     }
     
-    public static LinkedHashMap<String, String> generateTable(String s) {
+    public LinkedHashMap<String, String> generateTable(String operation) {
         LinkedHashMap<String, String> matrix = new LinkedHashMap<>();
         boolean loop = true;
         String key;
         do {
             try {
             Scanner in = new Scanner(System.in);
-            if(s.equals("reset") || s.equals("generate")) {
+            if(operation.equals("reset") || operation.equals("generate")) {
                 System.out.print("Enter the number of rows: "); numRows = in.nextInt();
                 System.out.print("Enter the number of columns: "); numCols = in.nextInt();
                 matrix.put("rows", String.valueOf(numRows));
                 matrix.put("cols", String.valueOf(numCols));
                 for(int i = 1; i <= numRows; i++)
                     for(int j = 1; j <= numCols; j++)
-                        matrix.put(("r"+(String.valueOf(i))) + ("c"+(String.valueOf(j))), generateRandomCharacters(3));
+                        matrix.put(("r"+(i)) + ("c"+(j)), generateRandomCharacters(3));
             } else {
                 matrix = readFile(fileSelector);
                 matrix.replace("rows", String.valueOf(numRows));
                 matrix.replace("cols", String.valueOf(numCols));
                 for(int i = 1; i <= numRows; i++)
                     for(int j = 1; j <= numCols; j++) {
-                        key = ("r"+(String.valueOf(i))) + ("c"+(String.valueOf(j)));
+                        key = ("r"+(i)) + ("c"+(j));
                         matrix.putIfAbsent(key, generateRandomCharacters(3));
                 }
             }
@@ -191,40 +183,36 @@ public class MethodContainer {
                     System.out.println("Invalid input!");
             }
         }while(loop);
-        if(s.equals("reset")) {
+        if(operation.equals("reset")) {
             new File(SAVED_FILE).delete();
             fileSelector = "default";
+            System.out.print("Reset is successful!\n\n");
         }
-        if(s.equals("addDimensionColumn"))
+        if(operation.equals("addDimensionColumn"))
             matrix = sortMatrixKeys(matrix);
         createFile(matrix, fileSelector);
         return matrix;
     }
 
-    public static LinkedHashMap<String, String> sortMatrixKeys(LinkedHashMap<String, String> matrix) {
-        List list = new LinkedList(matrix.entrySet());
-        Comparator sortKeys = (o1,o2) -> {
-            return ((Comparable) ((Map.Entry) (o1)).getKey()).compareTo(((Map.Entry) (o2)).getKey());  
-        };
-        Collections.sort(list, sortKeys);
-        HashMap sortedHashMap = new LinkedHashMap();
-        sortedHashMap.put("rows", String.valueOf(numRows));
-        sortedHashMap.put("cols", String.valueOf(numCols));
-        for (Iterator it = list.iterator(); it.hasNext();)   
-        {
-            Map.Entry entry = (Map.Entry) it.next();
-            if(!entry.getKey().equals("rows") && !entry.getKey().equals("cols"))
-                sortedHashMap.put(entry.getKey(), entry.getValue());  
-        }
-        return (LinkedHashMap<String, String>)sortedHashMap;
+    private LinkedHashMap<String, String> sortMatrixKeys(LinkedHashMap<String, String> matrix) {
+        String mapKey;
+        LinkedHashMap<String, String> sortedMatrix = new LinkedHashMap<>();
+        sortedMatrix.put("rows", String.valueOf(numRows));
+        sortedMatrix.put("cols", String.valueOf(numCols));
+        for(int i = 1; i <= numRows; i++)
+            for(int j = 1; j <= numCols; j++) {
+                mapKey = ("r"+(i)) + ("c"+(j));
+                sortedMatrix.put(mapKey, matrix.get(mapKey));
+            }
+        return sortedMatrix;
     }
     
-    public static void editCell(LinkedHashMap<String, String> map) { // Need saving
+    public void editCell(LinkedHashMap<String, String> matrix) {
             if(!fileSelector.equals("saved"))
                 System.out.println("Edit notice: A successful edit will produce a new text file called \"saved\".\n");
-            System.out.println("Table dimensions Row/s: " + numRows + " Column/s: " + numCols + " | Index starting value is 1");
-            int x = 0, y = 0;
-            String cellString = "", mapKey;
+            System.out.println("Table dimensions Rows: " + numRows + " Columns: " + numCols + " | Index starting value is 1");
+            int x, y;
+            String cellString, mapKey;
             boolean loop = true;
             do {
                     boolean innerLoop = true;
@@ -232,8 +220,8 @@ public class MethodContainer {
                     try {
                             System.out.print("Enter value for row: "); x = choice.nextInt();
                             System.out.print("Enter value for column: "); y = choice.nextInt();
-                            mapKey = ("r"+(String.valueOf(x))) + ("c"+(String.valueOf(y)));
-                            if(!map.containsKey(mapKey)) {
+                            mapKey = ("r"+(x)) + ("c"+(y));
+                            if(!matrix.containsKey(mapKey)) {
                                 System.out.println("Invalid dimension!"); System.out.println();
                             }
                             else {
@@ -243,65 +231,59 @@ public class MethodContainer {
                                         cellString = input.nextLine();
                                         if(!cellString.equals("")) {
                                             cellString = cellString.replaceAll("\\s+","");
-                                            map.replace(mapKey, cellString);
+                                            matrix.replace(mapKey, cellString);
                                             loop = false;
                                             innerLoop = false;
                                         }
                                         else
-                                                System.out.println("Input is empty!");
+                                            System.out.println("Input is empty!");
                                     } catch(Exception e) {
                                             System.out.println("Invalid input!");
                                     }
                                 }while(innerLoop);
                             }
                     } catch(Exception e) {
-                            System.out.println("Invalid input!");
+                        System.out.println("Invalid input!");
                     }
             }while(loop);
-            createFile(map, "saved");
+            createFile(matrix, "saved");
+            System.out.println();
     }
 
-    public static void searchCell(Map<String, String> map) {
-        String searchString = "";
+    public void searchCell(Map<String, String> matrix) {
+        String searchString;
         Scanner input = new Scanner(System.in);
         boolean loop = true; boolean searchStringCounted = false;
         do {
-                try {
-                        System.out.print("Input anything: ");
-                        searchString = input.nextLine();
-                        if(!searchString.equals("")) {
-                            boolean innerLoop = true;
-                            searchString = searchString.replaceAll("\\s+","");
-                                for(int i = 1; i <= numRows; i++) {
-                                        for(int j = 1; j <= numCols; j++) {
-                                            String key = (("r"+(String.valueOf(i)))) + (("c"+(String.valueOf(j))));
-                                            if(map.get(key).contains(searchString)) {
-                                                if(map.get(key).length() < searchString.length())
-                                                    continue;
-                                                else {
-                                                    String str = map.get(key);
-                                                    String findStr = searchString;
-                                                    int occurence = str.split(findStr, -1).length-1;
-                                                    System.out.println("Occurence of " + findStr + " on [" + i + ", " + j + "] is " + occurence + " time/s");
-                                                    searchStringCounted = true;
-                                                }
-                                            }
-                                            else
-                                                continue;
+            try {
+                    System.out.print("Input anything: ");
+                    searchString = input.nextLine();
+                    if(!searchString.equals("")) {
+                        searchString = searchString.replaceAll("\\s+","");
+                            for(int i = 1; i <= numRows; i++) {
+                                for(int j = 1; j <= numCols; j++) {
+                                    String key = (("r"+(i))) + (("c"+(j)));
+                                    if(matrix.get(key).contains(searchString))
+                                        if (matrix.get(key).length() < searchString.length()) {
+                                        } else {
+                                            String str = matrix.get(key);
+                                            int occurence = str.split(searchString, -1).length - 1;
+                                            System.out.println("Occurence of " + searchString + " on [" + i + ", " + j + "] is " + occurence + " time/s");
+                                            searchStringCounted = true;
                                         }
-                                if(!innerLoop)
-                                        break;
+                                }
                             }
-                            if(!searchStringCounted)
-                                    System.out.println("No occurence of the input String");
-                            loop = false;
-                        }
-                        else
-                                System.out.println("Input is empty!");
-                } catch(Exception e) {
-                        System.out.println("Invalid input!");
+                        if(!searchStringCounted)
+                            System.out.println("No occurence of the input String");
                         loop = false;
-                }
+                    }
+                    else
+                        System.out.println("Input is empty!");
+            } catch(Exception e) {
+                System.out.println("Invalid input!");
+                loop = false;
+            }
         }while(loop);
+        System.out.println();
     }
 }
